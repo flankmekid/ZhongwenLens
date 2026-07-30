@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ZhongwenLens.App": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}

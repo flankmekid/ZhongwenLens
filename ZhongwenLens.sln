@@ -1,0 +1,61 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{AA2B4A8B-8BB9-419D-94CA-081FC8875771}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ZhongwenLens.App", "src\ZhongwenLens.App\ZhongwenLens.App.csproj", "{6EEA2C80-005A-4478-A072-A7B95FAD1E63}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ZhongwenLens.Core", "src\ZhongwenLens.Core\ZhongwenLens.Core.csproj", "{7C787D49-D94B-4E62-96B2-693D89EF0193}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ZhongwenLens.DataBuild", "src\ZhongwenLens.DataBuild\ZhongwenLens.DataBuild.csproj", "{6ED4FFD5-B930-46D5-82EA-B76548C2E00E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM64 = Debug|ARM64
+		Debug|x64 = Debug|x64
+		Release|ARM64 = Release|ARM64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7C787D49-D94B-4E62-96B2-693D89EF0193}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{7C787D49-D94B-4E62-96B2-693D89EF0193}.Debug|ARM64.Build.0 = Debug|ARM64
+		{7C787D49-D94B-4E62-96B2-693D89EF0193}.Debug|x64.ActiveCfg = Debug|x64
+		{7C787D49-D94B-4E62-96B2-693D89EF0193}.Debug|x64.Build.0 = Debug|x64
+		{7C787D49-D94B-4E62-96B2-693D89EF0193}.Release|ARM64.ActiveCfg = Release|ARM64
+		{7C787D49-D94B-4E62-96B2-693D89EF0193}.Release|ARM64.Build.0 = Release|ARM64
+		{7C787D49-D94B-4E62-96B2-693D89EF0193}.Release|x64.ActiveCfg = Release|x64
+		{7C787D49-D94B-4E62-96B2-693D89EF0193}.Release|x64.Build.0 = Release|x64
+		{6EEA2C80-005A-4478-A072-A7B95FAD1E63}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{6EEA2C80-005A-4478-A072-A7B95FAD1E63}.Debug|ARM64.Build.0 = Debug|ARM64
+		{6EEA2C80-005A-4478-A072-A7B95FAD1E63}.Debug|ARM64.Deploy.0 = Debug|ARM64
+		{6EEA2C80-005A-4478-A072-A7B95FAD1E63}.Debug|x64.ActiveCfg = Debug|x64
+		{6EEA2C80-005A-4478-A072-A7B95FAD1E63}.Debug|x64.Build.0 = Debug|x64
+		{6EEA2C80-005A-4478-A072-A7B95FAD1E63}.Debug|x64.Deploy.0 = Debug|x64
+		{6EEA2C80-005A-4478-A072-A7B95FAD1E63}.Release|ARM64.ActiveCfg = Release|ARM64
+		{6EEA2C80-005A-4478-A072-A7B95FAD1E63}.Release|ARM64.Build.0 = Release|ARM64
+		{6EEA2C80-005A-4478-A072-A7B95FAD1E63}.Release|ARM64.Deploy.0 = Release|ARM64
+		{6EEA2C80-005A-4478-A072-A7B95FAD1E63}.Release|x64.ActiveCfg = Release|x64
+		{6EEA2C80-005A-4478-A072-A7B95FAD1E63}.Release|x64.Build.0 = Release|x64
+		{6EEA2C80-005A-4478-A072-A7B95FAD1E63}.Release|x64.Deploy.0 = Release|x64
+		{6ED4FFD5-B930-46D5-82EA-B76548C2E00E}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{6ED4FFD5-B930-46D5-82EA-B76548C2E00E}.Debug|ARM64.Build.0 = Debug|ARM64
+		{6ED4FFD5-B930-46D5-82EA-B76548C2E00E}.Debug|x64.ActiveCfg = Debug|x64
+		{6ED4FFD5-B930-46D5-82EA-B76548C2E00E}.Debug|x64.Build.0 = Debug|x64
+		{6ED4FFD5-B930-46D5-82EA-B76548C2E00E}.Release|ARM64.ActiveCfg = Release|ARM64
+		{6ED4FFD5-B930-46D5-82EA-B76548C2E00E}.Release|ARM64.Build.0 = Release|ARM64
+		{6ED4FFD5-B930-46D5-82EA-B76548C2E00E}.Release|x64.ActiveCfg = Release|x64
+		{6ED4FFD5-B930-46D5-82EA-B76548C2E00E}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7C787D49-D94B-4E62-96B2-693D89EF0193} = {AA2B4A8B-8BB9-419D-94CA-081FC8875771}
+		{6EEA2C80-005A-4478-A072-A7B95FAD1E63} = {AA2B4A8B-8BB9-419D-94CA-081FC8875771}
+		{6ED4FFD5-B930-46D5-82EA-B76548C2E00E} = {AA2B4A8B-8BB9-419D-94CA-081FC8875771}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CC83E96C-FE78-43EA-B720-165DD499493D}
+	EndGlobalSection
+EndGlobal

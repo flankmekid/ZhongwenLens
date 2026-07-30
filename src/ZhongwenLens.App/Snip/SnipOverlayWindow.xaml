@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="ZhongwenLens.App.Snip.SnipOverlayWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid x:Name="Root"
+          Background="Transparent"
+          IsTabStop="True"
+          KeyDown="OnKeyDown"
+          PointerPressed="OnPointerPressed"
+          PointerMoved="OnPointerMoved"
+          PointerReleased="OnPointerReleased">
+
+        <!-- The frozen desktop. Capturing first and showing a static image is what lets this
+             be an ordinary opaque window: WinUI 3 has poor support for per-pixel-alpha
+             windows, and freezing also stops the target text scrolling away mid-selection. -->
+        <Image x:Name="FrozenImage" Stretch="Fill" />
+
+        <Canvas x:Name="Layer">
+            <!-- Four rectangles rather than a punched-out geometry: simpler to compute and
+                 cheaper to update on every pointer move. -->
+            <Rectangle x:Name="DimTop" Fill="#8C000000" />
+            <Rectangle x:Name="DimBottom" Fill="#8C000000" />
+            <Rectangle x:Name="DimLeft" Fill="#8C000000" />
+            <Rectangle x:Name="DimRight" Fill="#8C000000" />
+
+            <Rectangle x:Name="SelectionBorder"
+                       Stroke="#FF4CA6FF"
+                       StrokeThickness="1"
+                       Visibility="Collapsed" />
+
+            <Border x:Name="Loupe"
+                    Width="132" Height="132"
+                    BorderBrush="#FF4CA6FF"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Visibility="Collapsed">
+                <!-- Clipped in code-behind: WinUI has no ClipToBounds, so the viewport gets an
+                     explicit RectangleGeometry once the scale factor is known. -->
+                <Canvas x:Name="LoupeViewport" Width="130" Height="130">
+                    <Image x:Name="LoupeImage" />
+                    <!-- Crosshair marking the exact pixel under the cursor. -->
+                    <Rectangle Canvas.Left="0" Canvas.Top="64" Width="130" Height="1" Fill="#66FF4C4C" />
+                    <Rectangle Canvas.Left="64" Canvas.Top="0" Width="1" Height="130" Fill="#66FF4C4C" />
+                </Canvas>
+            </Border>
+
+            <Border x:Name="ReadoutPanel"
+                    Background="#E6101418"
+                    CornerRadius="4"
+                    Padding="8,4"
+                    Visibility="Collapsed">
+                <TextBlock x:Name="Readout"
+                           Foreground="#FFEFF3F7"
+                           FontSize="12"
+                           FontFamily="Consolas" />
+            </Border>
+
+            <Border x:Name="HintPanel"
+                    Background="#E6101418"
+                    CornerRadius="6"
+                    Padding="14,9">
+                <TextBlock Foreground="#FFEFF3F7" FontSize="13"
+                           Text="Drag to select Chinese text  ·  Esc to cancel" />
+            </Border>
+        </Canvas>
+    </Grid>
+</Window>

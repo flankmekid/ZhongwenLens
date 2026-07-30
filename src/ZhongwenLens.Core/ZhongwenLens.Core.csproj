@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- windows-targeted because Capture, Ocr and Speech all sit on Windows-only APIs
+         (System.Drawing, System.Speech). The Text and Dictionary layers are portable,
+         but splitting the assembly for that alone isn't worth the friction. -->
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>ZhongwenLens.Core</RootNamespace>
+    <!-- AnyCPU keeps plain `dotnet build`/`dotnet test` working on this project alone;
+         x64/ARM64 let it map onto the solution platforms WinUI forces (see the .slnx). -->
+    <Platforms>AnyCPU;x64;ARM64</Platforms>
+    <!-- Required by the LibraryImport source generator, which emits unsafe marshalling code
+         for the screen-capture P/Invokes in Capture/NativeMethods.cs. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Managed Direct3D 11 / DXGI bindings, for Desktop Duplication capture. Hand-rolling
+         the ID3D11 COM interfaces would be several hundred lines of vtable-order-sensitive
+         interop for no benefit. -->
+    <PackageReference Include="Vortice.Direct3D11" Version="3.8.3" />
+    <PackageReference Include="Vortice.DXGI" Version="3.8.3" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.28.0" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.10" />
+    <!-- SAPI text-to-speech. Uses Microsoft Huihui Desktop (zh-CN), which ships with Windows,
+         so speech stays offline with nothing to download. -->
+    <PackageReference Include="System.Speech" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.10" />
+    <!-- Microsoft.Data.Sqlite 10.0.10 still resolves SQLitePCLRaw 2.1.11, whose bundled
+         SQLite build carries GHSA-2m69-gcr7-jv3q (high). Pinning the 3.x bundle forward
+         pulls a patched e_sqlite3. Keep this in step with ZhongwenLens.DataBuild. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
+  </ItemGroup>
+
+</Project>

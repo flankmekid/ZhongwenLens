@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="ZhongwenLens.App.StartupErrorWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Zhongwen Lens">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" x:Name="TitleText" FontSize="20" Margin="0,0,0,12" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <TextBlock x:Name="MessageText"
+                       FontFamily="Consolas"
+                       FontSize="13"
+                       TextWrapping="Wrap"
+                       IsTextSelectionEnabled="True" />
+        </ScrollViewer>
+
+        <Button Grid.Row="2"
+                x:Name="DismissButton"
+                Click="OnDismiss"
+                HorizontalAlignment="Right"
+                Margin="0,16,0,0"
+                Content="Close" />
+    </Grid>
+</Window>

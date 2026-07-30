@@ -1,0 +1,33 @@
+## Build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+arm64/
+*.user
+.vs/
+
+## Downloaded source data and models.
+## Regenerate with scripts/fetch-data.ps1 and scripts/fetch-models.ps1.
+## Not committed: CC-CEDICT is CC BY-SA 4.0, and the models are ~16 MB of binaries
+## that have no business in git history.
+data/raw/
+data/models/
+data/*.db
+*.partial
+
+## Generated dictionary
+dictionary.db
+dictionary.db-shm
+dictionary.db-wal
+
+## Packaging output: the publish tree, the staged package, the .msix, and the signing material.
+## The .pfx especially must never be committed, even though this one is only self-signed.
+artifacts/
+*.pfx
+*.cer
+
+## Generated from zhongwenlensIcon.png by scripts/make-icon.ps1 and make-msix-assets.ps1
+src/ZhongwenLens.App/Assets/app.ico
+src/ZhongwenLens.App/Images/

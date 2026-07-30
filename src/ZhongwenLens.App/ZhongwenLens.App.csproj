@@ -1,0 +1,70 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <RootNamespace>ZhongwenLens.App</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- No AnyCPU: WinUI 3 has native dependencies and must target a concrete
+         architecture. Casing matches the solution platform names exactly. -->
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <EnableMsixTooling>false</EnableMsixTooling>
+    <!-- Generated from zhongwenlensIcon.png by scripts/make-icon.ps1. Sets the exe icon shown
+         in Explorer, the taskbar and Alt+Tab; the tray icon loads the same file at run time. -->
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\app.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- WindowsAppSDKSelfContained needs a concrete RuntimeIdentifier and won't infer one,
+       failing with "requires a supported Windows architecture". $(Platform) falls back to
+       AnyCPU whenever nothing overrides it - which is what a bare `dotnet build` does - so
+       matching only on x64/ARM64 would leave the RID empty in exactly that case. Defaulting
+       to win-x64 keeps every invocation working: Visual Studio, `dotnet build` on the
+       solution, and `dotnet build` on this project alone. -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''">
+    <RuntimeIdentifier Condition="'$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ZhongwenLens.Core\ZhongwenLens.Core.csproj" />
+  </ItemGroup>
+
+  <!--
+    WinUI's XAML compiler emits compiled markup (.xbf) and an app resource index (.pri) into the
+    build output, but neither is added to the publish set. The published app therefore starts
+    fine and then throws XamlParseException the first time it opens a window - a failure that
+    never appears when running from bin/, only from a published or installed copy.
+
+    Adding them to ResolvedFileToPublish fixes `dotnet publish` itself, rather than leaving the
+    packaging script to copy them in behind its back.
+  -->
+  <Target Name="IncludeXamlResourcesInPublish" AfterTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <_XamlPublishResource Include="$(OutDir)$(AssemblyName).pri"
+                            Condition="Exists('$(OutDir)$(AssemblyName).pri')" />
+      <_XamlPublishResource Include="$(OutDir)**\*.xbf" />
+
+      <ResolvedFileToPublish Include="@(_XamlPublishResource)">
+        <RelativePath>%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+
+</Project>
