@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MSI authoring for Zhongwen Lens. Built by scripts/package-msi.ps1, which passes StageDir
+  and Version in.
+
+  Why MSI rather than MSIX: an MSIX must be signed, and Windows hard-blocks installation of one
+  whose certificate it doesn't trust — with no way for the user to proceed. Getting past that
+  needed either a commercial code-signing certificate or an admin PowerShell command to import a
+  self-signed one, which is a lot to ask before someone has even tried the app. An unsigned MSI
+  instead raises a SmartScreen warning the user can dismiss with "More info" then "Run anyway".
+
+  Scope is perUser deliberately: it installs under LocalAppData, so there is no UAC prompt at
+  all. The app is a personal tray utility that already keeps its data per user, so a per-machine
+  install would buy nothing and cost an elevation prompt.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <Package
+      Name="Zhongwen Lens"
+      Manufacturer="Zhongwen Lens"
+      Version="$(Version)"
+      UpgradeCode="E42276E0-29E7-4ECA-BA1A-82B7A6A046B9"
+      Scope="perUser"
+      Compressed="yes"
+      InstallerVersion="500">
+
+    <!-- Installing another build removes the old one rather than stacking side by side.
+         Scheduled afterInstallExecute so the upgrade is atomic: files land before the old
+         version is torn down, so a failure can't leave nothing installed.
+
+         AllowSameVersionUpgrades matters more than it looks. WiX generates a fresh ProductCode
+         on every build, so rebuilding the same version produces a package Windows sees as a
+         different product. Without this, reinstalling 1.0.1 over 1.0.1 registers it twice and
+         leaves two entries in Apply & Features - which is exactly what happened before it was
+         set. -->
+    <MajorUpgrade
+        Schedule="afterInstallExecute"
+        AllowSameVersionUpgrades="yes"
+        DowngradeErrorMessage="A newer version of Zhongwen Lens is already installed. Uninstall it first if you want to go back." />
+
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Icon Id="AppIcon" SourceFile="$(StageDir)\Assets\app.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/flankmekid/ZhongwenLens" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/flankmekid/ZhongwenLens" />
+
+    <!-- Nothing to configure, so the shortest sensible wizard: welcome, licence, progress,
+         done. An install directory picker would only invite people to put a per-user app
+         somewhere it can't write. -->
+    <ui:WixUI Id="WixUI_Minimal" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(StageDir)\LICENSE.rtf" />
+
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="INSTALLFOLDER" Name="Zhongwen Lens" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ShortcutFolder" Name="Zhongwen Lens" />
+    </StandardDirectory>
+
+    <Feature Id="Main" Title="Zhongwen Lens" Level="1">
+      <ComponentGroupRef Id="ApplicationFiles" />
+      <ComponentRef Id="StartMenuShortcut" />
+    </Feature>
+
+    <!-- Launch straight from the final wizard page. The app has no main window, so without this
+         a first-time user watches the installer close and sees apparently nothing happen.
+
+         The target is a directory-relative path rather than a [#FileId] reference, because the
+         payload is harvested by <Files>, which generates its own file IDs. WiX warns (WIX1077)
+         that "[INSTALLFOLDER]" looks like a property reference in a property's default value —
+         and says to ignore it for a string literal, which is what this is. WixShellExec runs
+         the value through MsiFormatRecord when it executes, so the directory resolves then.
+         The build suppresses that one warning; see scripts/package-msi.ps1. -->
+    <Property Id="WixShellExecTarget" Value="[INSTALLFOLDER]ZhongwenLens.App.exe" />
+    <CustomAction Id="LaunchApplication" DllEntry="WixShellExec" Impersonate="yes"
+                  BinaryRef="Wix4UtilCA_X86" />
+
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Start Zhongwen Lens" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+
+    <UI>
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication"
+               Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed" />
+    </UI>
+  </Package>
+
+  <Fragment>
+    <!-- Harvests the whole staged publish tree: the app, its runtimes, the dictionary and the
+         OCR models — around 545 files, so listing them by hand is not an option. -->
+    <ComponentGroup Id="ApplicationFiles" Directory="INSTALLFOLDER">
+      <Files Include="$(StageDir)\**" />
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <Component Id="StartMenuShortcut" Directory="ShortcutFolder"
+               Guid="BC9CACA2-BA7E-4D81-828A-10160AED3C2E">
+      <Shortcut Id="ZhongwenLensShortcut"
+                Name="Zhongwen Lens"
+                Description="Snip Chinese text from anywhere on screen and read it"
+                Target="[INSTALLFOLDER]ZhongwenLens.App.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="AppIcon" />
+
+      <RemoveFolder Id="RemoveShortcutFolder" Directory="ShortcutFolder" On="uninstall" />
+
+      <!-- A per-user component needs an HKCU key path; a file under LocalAppData isn't a valid
+           one for MSI's repair logic. -->
+      <RegistryValue Root="HKCU" Key="Software\ZhongwenLens"
+                     Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+  </Fragment>
+</Wix>

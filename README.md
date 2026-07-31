@@ -37,6 +37,7 @@ press **`Ctrl+Alt+Z`**, drag over the text, and the reading appears under your s
 - **HSK levels, radicals, and measure words** on every card.
 - **single-character view** additionally shows the common words that use that character.
 - **save words** with the sentence you met them in, and export to Anki.
+- **rebindable hotkey**, optional start-with-Windows, and layout/script preferences.
 - **works offline, permanently.** The dictionary and OCR models ship with the app. Nothing is
   ever sent anywhere.
 
@@ -55,42 +56,49 @@ press **`Ctrl+Alt+Z`**, drag over the text, and the reading appears under your s
 
 ## Install
 
-download the latest `.msix` from the [**Releases**](../../releases) page.
+download the latest `.msi` from the [**Releases**](../../releases) page and double-click it.
 
-the installer is signed with a self-signed certificate, so Windows needs to be told once that
-you trust it. Download `ZhongwenLens.cer` from the same release, then in an **administrator**
-PowerShell:
+that's it. no administrator rights, no certificates, nothing else to install: it installs just
+for you, and the app carries its own .NET and Windows App SDK runtimes.
 
-```powershell
-Import-Certificate -FilePath .\ZhongwenLens.cer -CertStoreLocation Cert:\LocalMachine\TrustedPeople
-```
+> **"Windows protected your PC"** — the installer isn't code-signed, because a certificate costs
+> a few hundred dollars a year and this is a free project. click **more info** then **run
+> anyway**. if you'd rather not take my word for it, [build it yourself](CONTRIBUTING.md); the
+> installer is produced by `scripts/package-msi.ps1` from the source in this repo.
 
-then double-click the `.msix` to install, or:
+uninstall from **Settings → Apps → Installed apps** like anything else. your saved words are
+kept — they live in `%LOCALAPPDATA%\ZhongwenLens`, separate from the app itself, so an uninstall
+or upgrade never touches them.
 
-```powershell
-Add-AppxPackage -Path .\ZhongwenLens-1.0.0.0-x64.msix
-```
-
-> **why the extra step?** a commercial code-signing certificate costs a few hundred dollars a
-> year, which isn't justified for a project like this. Importing the certificate into
-> `TrustedPeople` tells Windows you trust this one publisher. it's narrower than adding a
-> trusted root, and it's reversible: `Get-ChildItem Cert:\LocalMachine\TrustedPeople` to review,
-> `Remove-Item` to undo. if you'd rather not, [build it from source](CONTRIBUTING.md) instead.
-
-nothing else is required. the app bundles its own .NET and Windows App SDK runtimes.
-
-**requirements:** Windows 11 (or Windows 10 2004+), x64 or ARM64. for speech, a Chinese voice:
-Windows ships *Microsoft Huihui* by default.
+**requirements:** Windows 11 (or Windows 10 2004+), x64. for speech, a Chinese voice: Windows
+ships *Microsoft Huihui* by default.
 
 ## using it
 
 | | |
 |---|---|
-| **`Ctrl+Alt+Z`** | Snip. Drag over Chinese text. |
+| **`Ctrl+Alt+Z`** | Snip. Drag over Chinese text. Rebindable. |
 | **`Esc`** | Cancel the snip, or close the result. |
-| **Tray icon** | Left-click to snip; right-click for saved words and exit. |
+| **Tray icon** | Left-click to snip; right-click for saved words, settings and exit. |
 
-to start it with Windows, use **Settings → Apps → Startup**. it's declared but off by default.
+> **can't find the tray icon?** Windows 11 hides new ones by default. Click the `^` chevron on
+> the taskbar to see it, or pin it permanently under **Settings → Personalisation → Taskbar →
+> Other system tray icons**.
+
+### settings
+
+right-click the tray icon → **Settings…**
+
+- **snip hotkey** — rebind it to anything with Ctrl, Alt, Shift or Win. if the combination is
+  already taken by another app the change is refused and your old one stays working.
+- **start when I sign in**
+- **pinyin placement** — beside the text, above each word, or automatic (beside for short
+  selections, above for long ones)
+- **dictionary cards lead with** simplified or traditional
+- **speak automatically after each snip**
+
+changes apply immediately, and are stored in `%LOCALAPPDATA%\ZhongwenLens\settings.json` — the
+same place as your saved words, so they survive upgrades and uninstalls.
 
 ### saved words and Anki
 

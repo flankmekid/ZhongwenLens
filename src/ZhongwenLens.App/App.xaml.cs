@@ -1,7 +1,8 @@
-using Microsoft.UI.Dispatching;
+﻿using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using ZhongwenLens.App.Hotkeys;
 using ZhongwenLens.App.Interop;
+using ZhongwenLens.App.Results;
 using ZhongwenLens.App.Services;
 using ZhongwenLens.App.Snip;
 using ZhongwenLens.App.Tray;
@@ -10,17 +11,21 @@ namespace ZhongwenLens.App;
 
 /// <summary>
 /// Tray-resident shell. There is no main window: the app's entire interface is a hotkey, a
-/// tray icon, and the two windows a snip produces.
+/// tray icon, and the windows a snip produces.
 /// </summary>
 public partial class App : Application
 {
+    private readonly SettingsStore _settingsStore = new();
+
     private MessageWindow? _messageWindow;
     private GlobalHotkeyService? _hotkeys;
     private TrayIcon? _tray;
     private AppServices? _services;
     private SnipController? _controller;
     private Window? _lifetimeAnchor;
-    private Results.SavedWordsWindow? _savedWords;
+    private SavedWordsWindow? _savedWords;
+    private SettingsWindow? _settings;
+    private AppSettings _current = new();
 
     public App() => InitializeComponent();
 
@@ -31,6 +36,8 @@ public partial class App : Application
             ShowStartupError(DataPaths.DescribeMissing());
             return;
         }
+
+        _current = _settingsStore.Load();
 
         try
         {
@@ -47,36 +54,79 @@ public partial class App : Application
         CreateLifetimeAnchor();
 
         _messageWindow = new MessageWindow("ZhongwenLensMessageWindow");
-        _controller = new SnipController(_services, DispatcherQueue.GetForCurrentThread());
+        _controller = new SnipController(_services, DispatcherQueue.GetForCurrentThread())
+        {
+            Settings = _current,
+        };
 
         _hotkeys = new GlobalHotkeyService(_messageWindow);
         _hotkeys.Pressed += (_, _) => _controller.StartSnip();
 
-        var binding = HotkeyBinding.Default;
+        var binding = new HotkeyBinding(_current.HotkeyModifiers, _current.HotkeyVirtualKey);
         var registered = _hotkeys.TryRegister(binding, out var hotkeyError);
 
-        _tray = new TrayIcon(_messageWindow, registered
-            ? $"Zhongwen Lens — {binding.Display} to snip"
-            : $"Zhongwen Lens — {binding.Display} unavailable, click to snip");
+        _tray = new TrayIcon(_messageWindow, TrayTooltip(binding, registered))
+        {
+            HotkeyLabel = binding.Display,
+        };
 
         _tray.SnipRequested += (_, _) => _controller.StartSnip();
         _tray.SavedWordsRequested += (_, _) => ShowSavedWords();
+        _tray.SettingsRequested += (_, _) => ShowSettings();
         _tray.ExitRequested += (_, _) => Shutdown();
 
-        _controller.Failed += (_, message) => _tray?.SetTooltip($"Zhongwen Lens — {message}");
+        _controller.Failed += (_, message) => _tray?.SetTooltip($"Zhongwen Lens: {message}");
 
         if (!registered)
         {
             // A hotkey that silently does nothing is the worst failure mode for an app whose
-            // entire interface is that hotkey, so say so — the tray icon still works.
+            // entire interface is that hotkey, so say so — and point at where to change it.
             ShowStartupError(
                 $"""
                  {hotkeyError}
 
-                 Zhongwen Lens is running in the system tray and you can still snip by
-                 clicking its icon. Another application is holding {binding.Display}.
+                 Zhongwen Lens is running in the system tray. You can still snip by clicking its
+                 icon, and you can pick a different hotkey from the tray menu under Settings.
                  """,
                 fatal: false);
+        }
+    }
+
+    private static string TrayTooltip(HotkeyBinding binding, bool registered)
+        => registered
+            ? $"Zhongwen Lens: {binding.Display} to snip"
+            : $"Zhongwen Lens: {binding.Display} unavailable, click to snip";
+
+    /// <summary>Opens the settings window, reusing it if it's already open.</summary>
+    private void ShowSettings()
+    {
+        if (_hotkeys is null) return;
+
+        if (_settings is null)
+        {
+            _settings = new SettingsWindow(_settingsStore, _current, _hotkeys);
+            _settings.SettingsChanged += (_, updated) => ApplySettings(updated);
+            _settings.Closed += (_, _) => _settings = null;
+        }
+
+        _settings.Activate();
+        NativeMethods.SetForegroundWindow(WinRT.Interop.WindowNative.GetWindowHandle(_settings));
+    }
+
+    /// <summary>
+    /// Pushes a settings change through the running app, so nothing needs restarting.
+    /// </summary>
+    private void ApplySettings(AppSettings updated)
+    {
+        _current = updated;
+
+        if (_controller is not null) _controller.Settings = updated;
+
+        var binding = new HotkeyBinding(updated.HotkeyModifiers, updated.HotkeyVirtualKey);
+        if (_tray is not null)
+        {
+            _tray.HotkeyLabel = binding.Display;
+            _tray.SetTooltip(TrayTooltip(binding, registered: true));
         }
     }
 
@@ -87,13 +137,12 @@ public partial class App : Application
 
         if (_savedWords is null)
         {
-            _savedWords = new Results.SavedWordsWindow(_services);
+            _savedWords = new SavedWordsWindow(_services);
             _savedWords.Closed += (_, _) => _savedWords = null;
         }
 
         _savedWords.Activate();
-        Interop.NativeMethods.SetForegroundWindow(
-            WinRT.Interop.WindowNative.GetWindowHandle(_savedWords));
+        NativeMethods.SetForegroundWindow(WinRT.Interop.WindowNative.GetWindowHandle(_savedWords));
     }
 
     /// <summary>

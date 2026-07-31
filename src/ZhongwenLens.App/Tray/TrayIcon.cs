@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using ZhongwenLens.App.Interop;
@@ -17,7 +17,8 @@ public sealed class TrayIcon : IDisposable
     private const int IconId = 1;
     private const uint CommandSnip = 1;
     private const uint CommandSavedWords = 2;
-    private const uint CommandExit = 3;
+    private const uint CommandSettings = 3;
+    private const uint CommandExit = 4;
 
     private readonly MessageWindow _window;
     private nint _iconHandle;
@@ -44,7 +45,12 @@ public sealed class TrayIcon : IDisposable
 
     public event EventHandler? SavedWordsRequested;
 
+    public event EventHandler? SettingsRequested;
+
     public event EventHandler? ExitRequested;
+
+    /// <summary>Shortcut shown beside Snip in the menu. Follows the user's rebinding.</summary>
+    public string HotkeyLabel { get; set; } = "Ctrl+Alt+Z";
 
     /// <summary>Updates the hover tooltip, used to show hotkey registration problems.</summary>
     public void SetTooltip(string tooltip)
@@ -143,6 +149,10 @@ public sealed class TrayIcon : IDisposable
                     e.Handled = true;
                     SavedWordsRequested?.Invoke(this, EventArgs.Empty);
                     return;
+                case CommandSettings:
+                    e.Handled = true;
+                    SettingsRequested?.Invoke(this, EventArgs.Empty);
+                    return;
                 case CommandExit:
                     e.Handled = true;
                     ExitRequested?.Invoke(this, EventArgs.Empty);
@@ -174,8 +184,9 @@ public sealed class TrayIcon : IDisposable
 
         try
         {
-            NativeMethods.AppendMenu(menu, NativeMethods.MfString, CommandSnip, "Snip\tCtrl+Alt+Z");
+            NativeMethods.AppendMenu(menu, NativeMethods.MfString, CommandSnip, $"Snip\t{HotkeyLabel}");
             NativeMethods.AppendMenu(menu, NativeMethods.MfString, CommandSavedWords, "Saved words...");
+            NativeMethods.AppendMenu(menu, NativeMethods.MfString, CommandSettings, "Settings...");
             NativeMethods.AppendMenu(menu, NativeMethods.MfSeparator, 0, null);
             NativeMethods.AppendMenu(menu, NativeMethods.MfString, CommandExit, "Exit");
 
@@ -194,6 +205,7 @@ public sealed class TrayIcon : IDisposable
             {
                 case CommandSnip: SnipRequested?.Invoke(this, EventArgs.Empty); break;
                 case CommandSavedWords: SavedWordsRequested?.Invoke(this, EventArgs.Empty); break;
+                case CommandSettings: SettingsRequested?.Invoke(this, EventArgs.Empty); break;
                 case CommandExit: ExitRequested?.Invoke(this, EventArgs.Empty); break;
             }
         }

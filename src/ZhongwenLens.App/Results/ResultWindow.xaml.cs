@@ -39,12 +39,16 @@ public sealed partial class ResultWindow : Window
 
     private string _spokenText = string.Empty;
 
+    /// <summary>Current user settings; replaced live when the settings window changes them.</summary>
+    public AppSettings Settings { get; set; } = new();
+
     public ResultWindow(AppServices services)
     {
         _services = services;
         InitializeComponent();
 
         Title = "Zhongwen Lens";
+        WindowChrome.ApplyIcon(this);
         SpeakButton.IsEnabled = services.Speech.IsChineseVoiceAvailable;
         if (!services.Speech.IsChineseVoiceAvailable)
         {
@@ -64,6 +68,45 @@ public sealed partial class ResultWindow : Window
         Activate();
         Interop.NativeMethods.SetForegroundWindow(WinRT.Interop.WindowNative.GetWindowHandle(this));
         Root.Focus(FocusState.Programmatic);
+
+        if (Settings.SpeakOnCapture && !result.IsEmpty)
+        {
+            _services.Speech.Speak(result.SourceText);
+        }
+    }
+
+    /// <summary>
+    /// Whether the headline puts pinyin above each word instead of beside the text. In Auto,
+    /// short selections read better side by side and long ones only work as ruby.
+    /// </summary>
+    private bool UseRubyLayout(LookupResult result) => Settings.PinyinLayout switch
+    {
+        PinyinLayoutMode.SideBySide => false,
+        PinyinLayoutMode.Ruby => true,
+        _ => result.SourceText.Length > RubyLayoutThreshold,
+    };
+
+    /// <summary>
+    /// The headword a card leads with, honouring the script preference.
+    /// </summary>
+    /// <remarks>
+    /// Applies to dictionary cards only. The headline keeps whatever was actually on screen —
+    /// showing different characters there than the user just snipped would be disorienting, and
+    /// the card is where the dictionary's own answer belongs.
+    /// </remarks>
+    private string PreferredForm(DictEntry entry)
+        => Settings.Script == ScriptPreference.Traditional && entry.HasDistinctTraditional
+            ? entry.Traditional
+            : entry.Simplified;
+
+    /// <summary>The other script, shown as a secondary line when it differs.</summary>
+    private string? AlternateForm(DictEntry entry)
+    {
+        if (!entry.HasDistinctTraditional) return null;
+
+        return Settings.Script == ScriptPreference.Traditional
+            ? $"simplified {entry.Simplified}"
+            : $"traditional {entry.Traditional}";
     }
 
     private void Render(LookupResult result, float confidence)
@@ -114,7 +157,7 @@ public sealed partial class ResultWindow : Window
     /// </summary>
     private void RenderHeadline(LookupResult result)
     {
-        var ruby = result.SourceText.Length > RubyLayoutThreshold;
+        var ruby = UseRubyLayout(result);
 
         foreach (var token in result.Tokens)
         {
@@ -349,7 +392,7 @@ public sealed partial class ResultWindow : Window
         var primary = token.Entries[0];
         var panel = new StackPanel { Spacing = 3 };
         panel.Children.Add(BuildCardHeader(
-            token.Text, token.Pinyin, token.HskLevel, primary.Radical,
+            PreferredForm(primary), token.Pinyin, token.HskLevel, primary.Radical,
             primary.Senses, primary.HasDistinctTraditional ? primary.Traditional : null));
 
         // Every reading, not just the first: 行 is xíng, háng and hàng, and silently picking
@@ -366,16 +409,16 @@ public sealed partial class ResultWindow : Window
     {
         var panel = new StackPanel { Spacing = 3 };
         panel.Children.Add(BuildCardHeader(
-            entry.Simplified, entry.PinyinMarks, entry.HskNew ?? entry.HskOld, entry.Radical,
+            PreferredForm(entry), entry.PinyinMarks, entry.HskNew ?? entry.HskOld, entry.Radical,
             entry.Senses, entry.HasDistinctTraditional ? entry.Traditional : null));
 
         AppendSenses(panel, entry, showReading);
 
-        if (entry.HasDistinctTraditional)
+        if (AlternateForm(entry) is { } alternate)
         {
             panel.Children.Add(new TextBlock
             {
-                Text = $"traditional {entry.Traditional}",
+                Text = alternate,
                 FontSize = 11,
                 Opacity = 0.55,
                 Margin = new Thickness(0, 3, 0, 0),

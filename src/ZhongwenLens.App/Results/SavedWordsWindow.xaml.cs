@@ -1,4 +1,4 @@
-using Microsoft.UI.Windowing;
+﻿using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -22,7 +22,8 @@ public sealed partial class SavedWordsWindow : Window
         _services = services;
         InitializeComponent();
 
-        Title = "Saved words — Zhongwen Lens";
+        Title = "Zhongwen Lens Saved Words";
+        WindowChrome.ApplyIcon(this);
         Refresh();
 
         var appWindow = GetAppWindow();

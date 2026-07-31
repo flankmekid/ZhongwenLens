@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Window
     x:Class="ZhongwenLens.App.Results.SavedWordsWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="Saved words — Zhongwen Lens">
+    Title="Zhongwen Lens Saved Words">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="18,14">
         <Grid.RowDefinitions>

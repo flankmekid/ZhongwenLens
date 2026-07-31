@@ -16,6 +16,12 @@ public sealed class SnipController(AppServices services, DispatcherQueue dispatc
     private int _busy;
     private ResultWindow? _result;
 
+    /// <summary>
+    /// Current user settings, replaced live when they change. Pushed onto the result window on
+    /// every snip so a change takes effect on the next one, with nothing to restart.
+    /// </summary>
+    public AppSettings Settings { get; set; } = new();
+
     /// <summary>Raised when a snip fails, so the shell can surface it rather than swallow it.</summary>
     public event EventHandler<string>? Failed;
 
@@ -106,6 +112,7 @@ public sealed class SnipController(AppServices services, DispatcherQueue dispatc
                 _result.Closed += (_, _) => _result = null;
             }
 
+            _result.Settings = Settings;
             _result.Show(result, confidence, anchor, desktop);
             Log.Write("snip: result window shown");
         }

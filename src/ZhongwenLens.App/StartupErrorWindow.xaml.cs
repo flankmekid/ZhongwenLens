@@ -1,4 +1,4 @@
-using Microsoft.UI.Windowing;
+﻿using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Windows.Graphics;
 
@@ -21,6 +21,7 @@ public sealed partial class StartupErrorWindow : Window
         InitializeComponent();
 
         Title = "Zhongwen Lens";
+        Services.WindowChrome.ApplyIcon(this);
         TitleText.Text = onDismiss is null ? "Zhongwen Lens" : "Zhongwen Lens can't start";
         MessageText.Text = message;
         DismissButton.Content = onDismiss is null ? "Close" : "Exit";

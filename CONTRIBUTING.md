@@ -49,7 +49,8 @@ anything.
 src/ZhongwenLens.Core        capture, OCR, text, dictionary, speech, study — no UI
 src/ZhongwenLens.App         WinUI 3 shell: hotkey, overlay, result window, tray
 src/ZhongwenLens.DataBuild   raw sources -> dictionary.db
-scripts/                     data fetchers, icon generation, MSIX packaging
+scripts/                     data fetchers, icon generation, MSI packaging
+installer/                   WiX authoring for the MSI
 data/                        downloaded sources and the generated database (gitignored)
 ```
 
@@ -59,34 +60,52 @@ subtly wrong, and they're much easier to reason about in isolation.
 
 ## Building an installer
 
-```powershell
-pwsh -File scripts/make-icon.ps1        # .ico from assets/logo.png
-pwsh -File scripts/make-msix-assets.ps1 # MSIX tile images from the same logo
-pwsh -File scripts/package-msix.ps1     # publish, stage, pack, sign
-```
-
-This produces `artifacts/ZhongwenLens-<version>-x64.msix` (~116 MB) and the certificate it was
-signed with. Both .NET and the Windows App SDK are published self-contained, so the installed app
-needs no runtimes present on the target machine.
-
-To install it locally, from an **elevated** prompt:
+Needs [WiX](https://wixtoolset.org/) — pinned to v5, because v6 and later require accepting the
+Open Source Maintenance Fee EULA:
 
 ```powershell
-pwsh -File scripts/install-msix.ps1
+dotnet tool install --global wix --version 5.0.2
+wix extension add --global WixToolset.UI.wixext/5.0.2
+wix extension add --global WixToolset.Util.wixext/5.0.2
 ```
 
-`scripts/uninstall-msix.ps1` reverses it; add `-RemoveCertificate` to drop the trust entry too.
-Rebuilding at the same version upgrades in place, because the script reuses the existing
-certificate rather than minting a new identity each time.
+Then:
 
-The app project itself stays **unpackaged**. Converting it to single-project MSIX would make every
-F5 deploy a package and require a certificate just to debug; keeping packaging in a script leaves
-the development loop alone.
+```powershell
+pwsh -File scripts/make-icon.ps1     # .ico from assets/logo.png
+pwsh -File scripts/package-msi.ps1   # publish, stage, build the MSI
+```
+
+This produces `artifacts/ZhongwenLens-<version>-x64.msi` (~94 MB). Both .NET and the Windows App
+SDK are published self-contained, so the installed app needs no runtimes on the target machine.
+
+Install it with a double-click, or:
+
+```powershell
+msiexec /i artifacts\ZhongwenLens-1.0.0.0-x64.msi
+```
+
+### Why MSI, and why per-user
+
+This was MSIX first. MSIX must be signed, and Windows **hard-blocks** installing one whose
+certificate it doesn't trust — no "install anyway" option. Getting past that needed either a
+commercial certificate or an elevated PowerShell command to import a self-signed one, which is
+far too much to ask before someone has even tried the app. An unsigned MSI raises a SmartScreen
+warning instead, which is dismissible.
+
+The MSI installs **per-user** into `%LOCALAPPDATA%`, so there's no UAC prompt at all. The app is
+a personal tray utility that already stores its data per user, so a per-machine install into
+Program Files would buy nothing and cost an elevation prompt. It also means uninstalling leaves
+`%LOCALAPPDATA%\ZhongwenLens` — the saved words and log — alone, which the MSIX build did not.
+
+`UpgradeCode` in `installer/ZhongwenLens.wxs` must never change: it's how Windows recognises a
+new build as an upgrade rather than a second copy. Bump `Version` instead. Note MSI only compares
+the first three version fields when deciding to upgrade, so `1.0.0.1` will not replace `1.0.0.0`.
 
 ## Things worth knowing before you change something
 
-A few decisions look arbitrary until they bite you. All are documented in
-[DESIGN.md](DESIGN.md); these are the ones most likely to trip up a change.
+A few decisions look arbitrary until they bite you. The reasoning for each lives in a comment at
+the relevant place in the source; these are the ones most likely to trip up a change.
 
 **`dotnet publish` silently drops WinUI's XAML resources.** The compiled markup (`.xbf`) and the
 app resource index (`.pri`) are produced by the build but not added to the publish set. A
@@ -118,6 +137,7 @@ surnames and variant-of entries last.
 
 ## Data licensing
 
-CC-CEDICT is **CC BY-SA 4.0**. The generated `dictionary.db` is a derivative work, so if you
-distribute a build you inherit the attribution and share-alike obligations. The application code
-is unaffected — only the dictionary data. See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+The code is MIT (see [LICENSE](LICENSE)), but the dictionary data is not. CC-CEDICT is
+**CC BY-SA 4.0**, and the generated `dictionary.db` is a derivative work, so distributing a build
+carries attribution and share-alike obligations on that data specifically. The application code
+is unaffected. See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

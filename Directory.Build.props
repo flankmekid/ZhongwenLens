@@ -1,0 +1,16 @@
+<Project>
+
+  <!--
+    One version for every project. The MSI takes its version from the -Version argument to
+    scripts/package-msi.ps1, which also passes it to the build, so the installer and the
+    executable it installs can never disagree. This value is the default for plain
+    `dotnet build` during development.
+  -->
+  <PropertyGroup>
+    <Version>1.0.1</Version>
+    <Company>Zhongwen Lens</Company>
+    <Product>Zhongwen Lens</Product>
+    <Copyright>Copyright (c) 2026 dawid</Copyright>
+  </PropertyGroup>
+
+</Project>

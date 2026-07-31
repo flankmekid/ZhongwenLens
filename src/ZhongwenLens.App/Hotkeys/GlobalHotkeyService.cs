@@ -5,13 +5,57 @@ namespace ZhongwenLens.App.Hotkeys;
 
 /// <param name="Modifiers">Combination of NativeMethods.Mod* flags.</param>
 /// <param name="VirtualKey">Win32 virtual-key code.</param>
-public sealed record HotkeyBinding(int Modifiers, int VirtualKey, string Display)
+public sealed record HotkeyBinding(int Modifiers, int VirtualKey)
 {
     /// <summary>Ctrl+Alt+Z — the default, chosen because Windows and most apps leave it free.</summary>
     public static HotkeyBinding Default { get; } = new(
-        NativeMethods.ModControl | NativeMethods.ModAlt,
-        0x5A,
-        "Ctrl+Alt+Z");
+        NativeMethods.ModControl | NativeMethods.ModAlt, 0x5A);
+
+    /// <summary>Human-readable form, e.g. "Ctrl+Alt+Z".</summary>
+    public string Display => Describe(Modifiers, VirtualKey);
+
+    /// <summary>
+    /// Builds a label from raw Win32 codes, in the order Windows writes shortcuts.
+    /// </summary>
+    public static string Describe(int modifiers, int virtualKey)
+    {
+        var parts = new List<string>(4);
+        if ((modifiers & NativeMethods.ModControl) != 0) parts.Add("Ctrl");
+        if ((modifiers & NativeMethods.ModAlt) != 0) parts.Add("Alt");
+        if ((modifiers & NativeMethods.ModShift) != 0) parts.Add("Shift");
+        if ((modifiers & NativeMethods.ModWin) != 0) parts.Add("Win");
+
+        parts.Add(DescribeKey(virtualKey));
+        return string.Join('+', parts);
+    }
+
+    private static string DescribeKey(int virtualKey) => virtualKey switch
+    {
+        >= 0x30 and <= 0x39 => ((char)virtualKey).ToString(),          // 0-9
+        >= 0x41 and <= 0x5A => ((char)virtualKey).ToString(),          // A-Z
+        >= 0x70 and <= 0x87 => $"F{virtualKey - 0x6F}",                // F1-F24
+        0x20 => "Space",
+        0x0D => "Enter",
+        0x09 => "Tab",
+        0x2D => "Insert",
+        0x2E => "Delete",
+        0x24 => "Home",
+        0x23 => "End",
+        0x21 => "PageUp",
+        0x22 => "PageDown",
+        0xC0 => "`",
+        0xBD => "-",
+        0xBB => "=",
+        0xDB => "[",
+        0xDD => "]",
+        0xDC => "\\",
+        0xBA => ";",
+        0xDE => "'",
+        0xBC => ",",
+        0xBE => ".",
+        0xBF => "/",
+        _ => $"Key{virtualKey:X2}",
+    };
 }
 
 /// <summary>
