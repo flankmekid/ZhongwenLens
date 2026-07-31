@@ -122,7 +122,10 @@ public sealed partial class ResultWindow : Window
             return;
         }
 
-        SpeakButton.IsEnabled = _services.Speech.IsChineseVoiceAvailable;
+        // A selection of pure Latin has nothing to say, and a button that silently does nothing
+        // when pressed is worse than one that's visibly unavailable.
+        SpeakButton.IsEnabled = _services.Speech.IsChineseVoiceAvailable
+                                && ZhongwenLens.Core.Text.SpeechText.HasSpeakableContent(result.SourceText);
         CopyButton.IsEnabled = true;
 
         RenderHeadline(result);

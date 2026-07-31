@@ -33,7 +33,8 @@ press **`Ctrl+Alt+Z`**, drag over the text, and the reading appears under your s
   character definitions.
 - **pinyin that's actually correct.** Readings come from the dictionary entry, so 银行 is
   *yín háng*, never *yín xíng*.
-- **speak it aloud.** Offline text-to-speech for the whole selection or any single word.
+- **speak it aloud.** offline text-to-speech for the selection or any single word. only the
+  Chinese is read — English headings, buttons and pinyin caught in the same snip are skipped.
 - **HSK levels, radicals, and measure words** on every card.
 - **single-character view** additionally shows the common words that use that character.
 - **save words** with the sentence you met them in, and export to Anki.

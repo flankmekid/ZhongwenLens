@@ -1,4 +1,5 @@
 using System.Speech.Synthesis;
+using ZhongwenLens.Core.Text;
 
 namespace ZhongwenLens.Core.Speech;
 
@@ -78,14 +79,21 @@ public sealed class SapiSpeechService : ISpeechService
 
     public void Speak(string? text)
     {
-        if (_synthesizer is null || string.IsNullOrWhiteSpace(text)) return;
+        if (_synthesizer is null) return;
+
+        // Filtered here rather than at each call site, so every path — the whole selection, a
+        // single word card, speak-on-capture — gets the same treatment. A snip of a dictionary
+        // page catches headings and buttons alongside the Chinese, and a Mandarin voice reading
+        // "Simplified Chinese" and "Learn More" is worse than useless.
+        var speakable = SpeechText.Extract(text);
+        if (speakable.Length == 0) return;
 
         lock (_gate)
         {
             // Cancel whatever is playing first, so repeatedly clicking the speaker button
             // replaces the audio instead of queuing several utterances back to back.
             _synthesizer.SpeakAsyncCancelAll();
-            _synthesizer.SpeakAsync(text);
+            _synthesizer.SpeakAsync(speakable);
         }
     }
 
